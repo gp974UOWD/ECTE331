@@ -66,7 +66,7 @@ public class RdWrImg {
 		int ratio = 10;
 		double threshold = ratio*minimum;
 		
-		int[][] coordinates = 
+		int[][] coordinates = new int[3][3]; //temporary to relieve errors
 		return coordinates;
 	}
 
