@@ -6,6 +6,12 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.awt.image.DataBufferByte;
+import java.util.ArrayList;
+
+/*
+im1 = source image
+im2 = template image
+*/
 
 public class RdWrImg {
 
@@ -27,8 +33,10 @@ public class RdWrImg {
 		
 		int[][] result = templateMatching(im1, im2);
 		
-		short xCoord=(short)result[0][0];
-		short yCoord=(short)result[0][0];
+		// temporary
+		short xCoord=(short)result[0][2];
+		short yCoord=(short)result[0][1];
+		
 		short rectWidth=(short)im2.getWidth();
 		short rectHeight=(short)im2.getHeight();
 
@@ -40,8 +48,8 @@ public class RdWrImg {
 	
 	public static int[][] templateMatching(BufferedImage im1, BufferedImage im2) {
 		
-		int c1 = im1.getWidth();
-		int r1 = im1.getHeight();
+		int c1 = im1.getWidth(); // column = image width		
+		int r1 = im1.getHeight(); // row = image height
 		int c2 = im2.getWidth();
 		int r2 = im2.getHeight();
 
@@ -49,13 +57,14 @@ public class RdWrImg {
 		double minimum = 1000000;
 
 		BufferedImage Nimage;
-		double absDiff = 0;
+		double absDiff = 0; //temporary
 		double[][] absDiffMat = new double[r1-r2+1][c1-c2+1];
 		
 		for (int i=0; i<r1-r2+1; i++) {
 			for (int j=0; j<c1-c2+1; j++) {
 				Nimage = im1.getSubimage(j,i,c2,r2);
-				
+				absDiff = absDiff(Nimage, im2, tempSize);
+				absDiffMat[i][j] = absDiff;
 
 				if (absDiff < minimum) {
 					minimum = absDiff;
@@ -69,11 +78,25 @@ public class RdWrImg {
 		int[][] coordinates = new int[3][3]; //temporary to relieve errors
 		return coordinates;
 	}
+	
+	private static double absDiff(BufferedImage Nimage, BufferedImage im2, int tempSize) {
+		byte[] pixels;
+		pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
+		
+		double absDiff = 0;
+		int width = Nimage.getWidth();
+		int height = Nimage.getHeight();
+		
+		for (int i=0; i<width; i++) {
+			for (int j=0; j<height; j++) {
+				double temp = Math.abs(Nimage[i][j]-im2[i][j]); // what is absDiff?????
+			}
+		}
+		
+		return absDiff / tempSize;
+		
+	}
 
-	/**
-	 *    
-	 * @param fileName
-	 */
 	public static void readColourImage(String fileName) {
 
 		try
@@ -118,15 +141,6 @@ public class RdWrImg {
 	}
 
 
-
-	/**
-	 * 
-	 * @param fileName
-	 * @param xCoord
-	 * @param yCoord
-	 * @param rectWidth
-	 * @param rectHeight
-	 */
 	public static void writeColourImage(String fileName,short xCoord, short yCoord, short rectWidth, short rectHeight) {   
 		try {                   
 
@@ -142,16 +156,6 @@ public class RdWrImg {
 	}
 
 
-
-	/**
-	 * 
-	 * @param img
-	 * @param xCoord
-	 * @param yCoord
-	 * @param rectWidth
-	 * @param rectHeight
-	 * @return
-	 */
 	public static BufferedImage add_Rectangle(Image img, short xCoord, short yCoord, short rectWidth, short rectHeight) {
 
 		if (img instanceof BufferedImage) {
