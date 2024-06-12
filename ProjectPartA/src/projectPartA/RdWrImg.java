@@ -6,6 +6,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.awt.image.DataBufferByte;
+import java.util.ArrayList;
 
 public class RdWrImg {
 
@@ -21,11 +22,11 @@ public class RdWrImg {
 
 	public static void main(String[] args) throws IOException {
 		
-		String templateName="Template.jpg";
-		String sourceName="TenCardG.jpg";
+		String templateName = "Template.jpg";
+		String sourceName = "TenCardG.jpg";
 		
-		File source=new File(sourceName);
-		File template=new File(templateName);
+		File source = new File(sourceName);
+		File template = new File(templateName);
 		
 		BufferedImage sourceImage = ImageIO.read(source);
 		BufferedImage templateImage = ImageIO.read(template);
@@ -35,65 +36,65 @@ public class RdWrImg {
 		widthTemplate = templateImage.getWidth();
 		heightTemplate = templateImage.getHeight();
 		
-		//short[][] graySource = readColourImage(sourceName);
-		//short[][] grayTemplate = readColourImage(templateName);
-		
 		short[][] result = templateMatching(sourceImage, templateImage);
+
+		short rectWidth = (short)templateImage.getWidth();
+		short rectHeight = (short)templateImage.getHeight();
 		
-		// temporary
-		short xCoord=result[0][2];
-		short yCoord=result[0][1];
-		
-		short rectWidth=(short)templateImage.getWidth();
-		short rectHeight=(short)templateImage.getHeight();
-		
-		String fileNameOut="Result.jpg";
-		writeColourImage(fileNameOut,xCoord,yCoord,rectWidth,rectHeight);
+		String fileNameOut = "Result.jpg";
+		//writeColourImage(fileNameOut,result,rectWidth,rectHeight, sourceImage);
 	}   
 
 	
-	public static short[][] templateMatching(BufferedImage graySource, BufferedImage grayTemplate) throws IOException {
+	public static short[][] templateMatching(BufferedImage source, BufferedImage template) throws IOException {
 		
-		int tempSize = heightTemplate*widthTemplate;
+		double tempSize = heightTemplate*widthTemplate;
 		double minimum = 1000000;
 
-		BufferedImage Nimage;
-		double absDiff;
-		double[][] absDiffMat = new double[Math.abs(heightSource-heightTemplate)][Math.abs(widthSource-widthTemplate)];
+		double[][] absDiffMat = new double[Math.abs(widthSource-widthTemplate)][Math.abs(heightSource-heightTemplate)];
 		
 		int ratio = 10;
 		double threshold;
 		
 		short[][] coordinates = new short[1][2];
 		
-		int numOfMatches = 0;
+		double absDiff = 0;
 		
-		for (int i=0; i<heightSource-heightTemplate; i++) {
-			for (int j=0; j<widthSource-widthTemplate; j++) {
-				Nimage = graySource.getSubimage(i,j,widthTemplate,heightTemplate);
-				//ImageIO.write(grayTemplate, "jpg", new File("Hi.jpg"));
+		ArrayList<short[]> coordinatesList = new ArrayList<short[]>();
+		
+		for (int i=0; i<Math.abs(widthSource-widthTemplate); i++) {
+			for (int j=0; j<Math.abs(heightSource-heightTemplate); j++) {
+				BufferedImage Nimage = source.getSubimage(i,j,widthTemplate,heightTemplate);
 				
 				short[][] grayNimage = convertImage(Nimage);
-				short[][] temp = convertImage(grayTemplate);
+				short[][] grayTemp = convertImage(template);
 				
-				absDiff = absDiff(grayNimage, temp, tempSize, Nimage.getHeight(), Nimage.getWidth());
+				for (int a = 0; a < heightTemplate; a++) {
+			        for (int b = 0; b < widthTemplate; b++) {
+			        	absDiff += Math.abs(grayNimage[a][b] - grayTemp[a][b])/tempSize;
+			        	//System.out.println(minimum + "     " + absDiff + "     " + a + " " + b + "     " + i + " " + j);
+					}
+				}
 				
 				absDiffMat[i][j] = absDiff;
 				
 				if (absDiff < minimum) {
 					minimum = absDiff;
-				}
+				}				
 				
-				threshold = ratio*minimum;
+				threshold = ratio * minimum;
 				
-				if(absDiff <= threshold) {
-					
-				}
+				System.out.println(minimum + "     " + absDiff + "     " + i + " " + j);
 				
+				if (absDiffMat[i][j] <= threshold) {
+	                short[] coordinate = new short[] {(short) i, (short) j};
+	                coordinatesList.add(coordinate);
+	            }
 			}
 		}
 		
-		return coordinates;
+	    coordinates = coordinatesList.toArray(new short[0][]);
+	    return coordinates;
 	}
 	
 	private static short[][] convertImage(BufferedImage Nimage) {
@@ -112,34 +113,38 @@ public class RdWrImg {
 		int pg;//  green
 		int pb;// blue 
 		
-		for (int i=0; i<Nheight;i++)
-			for(int j=0;j<Nwidth;j++)
+		for (int i = 0; i<Nheight; i++)
+			for(int j = 0; j<Nwidth; j++)
 			{        		     
-				coord= 3*(i*Nwidth+j);
-				pr= ((short) pixels[coord] & 0xff); // red
-				pg= (((short) pixels[coord+1] & 0xff));//  green
-				pb= (((short) pixels[coord+2] & 0xff));// blue                
+				coord = 3*(i * Nwidth+j);
+				pr = ((short) pixels[coord] & 0xff); // red
+				pg = ((short) pixels[coord+1] & 0xff);//  green
+				pb = ((short) pixels[coord+2] & 0xff);// blue                
 
-				grayNimage[i][j]=(short)Math.round(0.299 *pr + 0.587 * pg  + 0.114 * pb);         
+				grayNimage[i][j] = (short)Math.round(0.299 *pr + 0.587 * pg  + 0.114 * pb);         
 
 			}  
 		
 		return grayNimage;
 	}
 	
-	private static double absDiff(short[][] grayNimage, short[][] grayTemplate, int tempSize, int heightNimage, int widthNimage) {
-
-		double absDiff = 0;
-		
-		for (int i=0; i<heightNimage; i++) {
-			for (int j=0; j<widthNimage; j++) {
-				absDiff = (Math.abs(grayNimage[i][j] - grayTemplate[i][j]));
-				//System.out.println(grayNimage[i][j] + "     " + grayTemplate[i][j] + "     " + absDiff);
-			}
-		}
-		return absDiff;
-		
-	}
+//	private static double absDiff(short[][] grayNimage, short[][] grayTemplate, int tempSize, int heightNimage, int widthNimage) {
+//
+//		double absDiff = 0;
+//		int heightTemplate = grayTemplate.length;
+//	    int widthTemplate = grayTemplate[0].length;
+//
+//	    for (int i = 0; i < heightNimage && i < heightTemplate; i++) {
+//	        for (int j = 0; j < widthNimage && j < widthTemplate; j++) {
+//	        	absDiff += Math.abs(grayNimage[i][j] - grayTemplate[i][j]);
+//	        	System.out.println(absDiff + "     " + i + " " + j);
+//			}
+//		}
+//	    absDiff = absDiff / tempSize;
+//	    //System.out.println(absDiff);
+//		return absDiff;
+//		
+//	}
 
 	public static short[][] readColourImage(String fileName) {
 
@@ -184,14 +189,12 @@ public class RdWrImg {
 	}
 
 
-	public static void writeColourImage(String fileName,short xCoord, short yCoord, short rectWidth, short rectHeight) {   
+	public static void writeColourImage(String fileName, short[][] coordinates, short rectWidth, short rectHeight, BufferedImage image) {   
 		try {                   
 
 			Image scaledImage = image.getScaledInstance(-1,-1, 0);
 			// rectangle coordinates and dimension to superimpose on the image
-			ImageIO.write(
-					add_Rectangle(scaledImage,xCoord,yCoord,rectWidth,rectHeight),"jpg",
-					new File(fileName));
+			ImageIO.write(addRectangle(scaledImage, coordinates, rectWidth, rectHeight),"jpg", new File(fileName));
 
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -199,21 +202,21 @@ public class RdWrImg {
 	}
 
 
-	public static BufferedImage add_Rectangle(Image img, short xCoord, short yCoord, short rectWidth, short rectHeight) {
+	public static BufferedImage addRectangle(Image img, short[][] coordinates, short rectWidth, short rectHeight) {
 
 		if (img instanceof BufferedImage) {
 			return (BufferedImage) img;
 		}
 
-		// Create a buffered image with transparency
-		BufferedImage bi = new BufferedImage(
-				img.getWidth(null), img.getHeight(null),
-				BufferedImage.TYPE_INT_RGB);
+		BufferedImage bi = new BufferedImage(img.getWidth(null), img.getHeight(null), BufferedImage.TYPE_INT_RGB);
 
 		Graphics2D g2D = bi.createGraphics();
 		g2D.drawImage(img, 0, 0, null);
 		g2D.setColor(Color.RED);
-		g2D.drawRect(xCoord, yCoord, rectWidth, rectHeight);              
+		
+		//incomplete
+		g2D.drawRect(xCoord, yCoord, rectWidth, rectHeight);         
+		
 		g2D.dispose();
 		return bi;
 	}
