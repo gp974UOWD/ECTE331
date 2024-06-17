@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class Main {
 	
-	static int numOfThreads = 1; // Change according to requirements. numOfThreads = 1 when checking for single thread implementation
+	static int numOfThreads = 6; // Change according to requirements. numOfThreads = 1 when checking for single thread implementation
 
 	public static void main(String[] args) throws IOException, InterruptedException{
 
@@ -71,22 +71,22 @@ public class Main {
 		writeColourImage("Result.jpg", mergedCoordinates, (short)Data.widthTemplate, (short)Data.heightTemplate, sourceImage); // Outputs result image with rectangles in correct spots
 	}
 
-
+	// Method to merge the coordinate arrays from each thread result. short[][]... is used due to a changing number of callers.
 	private static short[][] mergeArrays(short[][]... arrays) {
 		int length = 0;
 		for (short[][] arr : arrays) {
 			length += arr.length;
 		}
 
-		short[][] result = new short[length][];
+		short[][] mergedCoordinates = new short[length][];
 
 		int index = 0;
 		for (short[][] arr : arrays) {
-			System.arraycopy(arr, 0, result, index, arr.length);
+			System.arraycopy(arr, 0, mergedCoordinates, index, arr.length);
 			index += arr.length;
 		}
 
-		return result;
+		return mergedCoordinates;
 	}
 
 	// Method to output the BufferedImage file into the filestream

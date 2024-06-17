@@ -29,7 +29,6 @@ public class TemplateMatchThread extends Thread{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 	// For use in the main class
@@ -96,7 +95,7 @@ public class TemplateMatchThread extends Thread{
 	    for (int i = 0; i < height; i++) {
 	        for (int j = 0; j < width; j++) {
 	        	
-	            rgb = Nimage.getRGB(j,i);
+	            rgb = Nimage.getRGB(j,i); // Gets the rgb value at the specific coordinate
 	            pr = (rgb >> 16) & 0xFF;
 	            pg = (rgb >> 8) & 0xFF;
 	            pb = rgb & 0xFF;
